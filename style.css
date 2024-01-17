@@ -1,0 +1,40 @@
+/**
+ * Theme Name:     OceanWP Child
+ * Author:         Creativity Outside
+ * Template:       oceanwp
+ * Text Domain:	   oceanwp-child
+ * Description:    Child by Co
+ */
+#volunteerForm {
+    display: flex;
+    flex-wrap: wrap;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+#volunteerForm .form-group {
+    width: 45%;
+    margin-right: 15px;
+}
+
+#volunteerForm .form-group.submit {
+    width: 1000%;
+}
+
+#volunteerForm label {
+
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+#volunteerForm input,
+#volunteerForm textarea {
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+#volunteerForm .error-message {
+    color: tomato;
+}
