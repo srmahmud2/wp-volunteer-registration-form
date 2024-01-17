@@ -2,8 +2,8 @@
 /* Template Name: Data Form */ 
 
 // Get the registration message from transient or user meta
-$message_code = get_transient('registration_message') ?: (isset($_GET['message']) ? $_GET['message'] : '');
-
+// $message_code = get_transient('registration_message') ?: (isset($_GET['message']) ? $_GET['message'] : '');
+$message = isset($_GET['message']) ? $_GET['message'] : '';
 get_header(); ?>
 
 <?php do_action( 'ocean_before_content_wrap' ); ?>
@@ -147,15 +147,10 @@ get_header(); ?>
 
                 <div class="form-group submit">
                     <input type="submit" name="register" value="Register">
-                    <p  id="registration-message">
-                        <?php 
-                        if ($message_code) {
-                            echo esc_html($message_code);
-                        }
-                        ?>
-                    </p>
-
-
+                    
+                    <?php if (!empty($message)): ?>
+                        <p id="registration-message"><?php echo esc_html($message); ?></p>
+                    <?php endif; ?>
                 </div>
             </form>
 
