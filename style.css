@@ -38,3 +38,8 @@
 #volunteerForm .error-message {
     color: tomato;
 }
+
+#volunteerForm #registration-message {
+    border: 2px solid green;
+    padding: 10px;
+}
