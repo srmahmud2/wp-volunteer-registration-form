@@ -10,7 +10,7 @@ get_header(); ?>
 
 		<?php do_action( 'ocean_before_primary' ); ?>
 
-		<div id="primary" class="content-area clr">
+		<div id="primary" class="content-area clr" style="width: 100%;">
 
 			<?php do_action( 'ocean_before_content' ); ?>
 
@@ -22,43 +22,64 @@ get_header(); ?>
 				// Elementor `single` location.
 				if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'single' ) ) {
 
-                //table code starts here
-                global $wpdb;
-                $table_name = $wpdb->prefix . 'volunteers';
-                $result = $wpdb->get_results("select * from $table_name");
-
 ?>
-<table id="example" class="table table-striped" style="width:100%">
+<?php
+//table code starts here
+global $wpdb;
+$table_name = $wpdb->prefix . 'volunteers';
+$result = $wpdb->get_results("select * from $table_name");
+
+function renderTableHeaderFooter() {
+    $headers = [
+        'ID','Volunteer ID', 'Data Inscrição', 'Primeiro Nome', 'Sobrenome',
+        'Código Postal', 'Morada', 'Localidade','Telemovel', 'Email',
+        'Educação', 'Profissão', 'Encaminhado', 'A Date',
+        'Preferência -1', 'Preferência -2', 'Preferência -3', 'Preferências - outras'
+    ];
+
+    echo '<tr>';
+    foreach ($headers as $header) {
+        echo '<th>' . esc_html($header) . '</th>';
+    }
+    echo '</tr>';
+}
+?>
+<div class="datatable-area">
+    <table id="volunteerTable" class="table table-striped volunteer-table" style="width:100%">
         <thead>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Age</th>
-                <th>Start date</th>
-                <th>Salary</th>
-            </tr>
+            <?php renderTableHeaderFooter(); ?>
         </thead>
         <tbody>
-            <?php
-            foreach ($result as $volunteer) {?>
-            <tr>
-                <td><?php echo $volunteer->title; ?></td>
-                <td><?php echo $volunteer->author; ?></td>
-            </tr>
-            <?php } ?>
+            <?php if (!empty($result)) {
+                foreach ($result as $volunteer) { ?>
+                    <tr>
+                        <td><?php echo esc_html($volunteer->id); ?></td>
+                        <td><?php echo esc_html($volunteer->volunteer_id); ?></td>
+                        <td><?php echo esc_html($volunteer->data_inscricao); ?></td>
+                        <td><?php echo esc_html($volunteer->first_name); ?></td>
+                        <td><?php echo esc_html($volunteer->last_name); ?></td>
+                        <td><?php echo esc_html($volunteer->post_code); ?></td>
+                        <td><?php echo esc_html($volunteer->morada); ?></td>
+                        <td><?php echo esc_html($volunteer->localidade); ?></td>
+                        <td><?php echo esc_html($volunteer->telemovel); ?></td>
+                        <td><?php echo esc_html($volunteer->volunteer_email); ?></td>
+                        <td><?php echo esc_html($volunteer->education); ?></td>
+                        <td><?php echo esc_html($volunteer->profession); ?></td>
+                        <td><?php echo esc_html($volunteer->encaminhado); ?></td>
+                        <td><?php echo esc_html($volunteer->a_date); ?></td>
+                        <td><?php echo esc_html($volunteer->pref1); ?></td>
+                        <td><?php echo esc_html($volunteer->pref2); ?></td>
+                        <td><?php echo esc_html($volunteer->pref3); ?></td>
+                        <td><?php echo esc_html($volunteer->pref_other); ?></td>
+                    </tr>
+                <?php }
+            } ?>
         </tbody>
         <tfoot>
-            <tr>
-                <th>Name</th>
-                <th>Position</th>
-                <th>Office</th>
-                <th>Age</th>
-                <th>Start date</th>
-                <th>Salary</th>
-            </tr>
+            <?php renderTableHeaderFooter(); ?>
         </tfoot>
     </table>
+</div>
 <?php
 					// Start loop.
 					while ( have_posts() ) :

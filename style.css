@@ -14,6 +14,11 @@
     border-radius: 8px;
 }
 
+#volunteerForm input[type="number"] {
+    width: 100%;
+    max-width: 100%;
+}
+
 #volunteerForm .form-group {
     width: 45%;
     margin-right: 15px;
@@ -42,4 +47,8 @@
 #volunteerForm #registration-message {
     border: 2px solid green;
     padding: 10px;
+}
+
+.datatable-area {
+    overflow-x: auto;
 }

@@ -30,7 +30,7 @@ get_header(); ?>
 
                 <div class="form-group">
                     <label for="volunteer_id">ID</label>
-                    <input type="text" name="volunteer_id" id="volunteer_id" placeholder="Enter ID">
+                    <input type="number" name="volunteer_id" id="volunteer_id" placeholder="Enter ID">
                     <span class="error-message" id="error-volunteer_id"></span>
                 </div>
 

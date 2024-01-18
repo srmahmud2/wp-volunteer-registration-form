@@ -1,5 +1,10 @@
 jQuery(document).ready(function ($) {
-  $("#example").DataTable();
+  $('#volunteerTable').DataTable( {
+    "responsive": true,
+    responsive: {
+        details: true
+    }
+} );
 
 
 
