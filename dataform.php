@@ -1,10 +1,18 @@
 <?php 
 /* Template Name: Data Form */ 
+$is_edit_mode = false;
 
-// Get the registration message from transient or user meta
-// $message_code = get_transient('registration_message') ?: (isset($_GET['message']) ? $_GET['message'] : '');
-$message = isset($_GET['message']) ? $_GET['message'] : '';
-get_header(); ?>
+// Check if we are in edit mode (ID is passed)
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $is_edit_mode = true;
+    $volunteer_id = $_GET['id'];
+}
+
+$message = get_transient('registration_message'); // Fetch the message set in functions.php
+delete_transient('registration_message'); // Delete the transient to prevent message persistence
+
+get_header(); 
+?>
 
 <?php do_action( 'ocean_before_content_wrap' ); ?>
 
@@ -19,14 +27,28 @@ get_header(); ?>
         <div id="content" class="site-content clr">
 
             <?php do_action( 'ocean_before_content_inner' ); ?>
-
             <?php
+                // Check if the post requires a password and if it has been provided
+                if ( post_password_required() ) {
+                    // Display the password form
+                    echo get_the_password_form();
+                } else {
+                    // Your form and content goes here
+                ?>
+                    <?php
 				// Elementor `single` location.
 				if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'single' ) ) {
 ?>
-            <form id="volunteerForm" method="post" onsubmit="return validateForm()">
+           
+            <form id="volunteerForm" method="post">
                 <?php wp_nonce_field('volunteer_form_nonce', 'nonce_field'); ?>
-                <input type="hidden" name="action" value="register_volunteer_form"/>
+                <input type="hidden" name="action" value="<?php echo $is_edit_mode ? 'edit_volunteer_form' : 'register_volunteer_form'; ?>"/>
+                <input type="hidden" name="volunteer_id" value="<?php echo $is_edit_mode ? esc_attr($volunteer_id) : ''; ?>"/>
+
+                <!-- //display error/success message here -->
+                <div id="form-errors" class="text-danger" style="display: none;"></div>
+                <div id="form-success" class="text-success" style="display: none;"></div>
+
 
                 <div class="form-group">
                     <label for="volunteer_id">ID</label>
@@ -144,14 +166,14 @@ get_header(); ?>
                         placeholder="Por favor, mencione suas outras preferências."></textarea>
                         <span class="error-message" id="error-pref_other"></span>
                 </div>
-
+                
                 <div class="form-group submit">
-                    <input type="submit" name="register" value="Register">
-                    
+                    <input type="submit" name="register" value="<?php echo $is_edit_mode ? 'Update' : 'Register'; ?>">
                     <?php if (!empty($message)): ?>
                         <p id="registration-message"><?php echo esc_html($message); ?></p>
                     <?php endif; ?>
                 </div>
+
             </form>
 
             <?php
@@ -167,7 +189,13 @@ get_header(); ?>
 
 				}
 				?>
-
+                    
+                    
+                    
+                <?php
+                }
+            ?>
+            
             <?php do_action( 'ocean_after_content_inner' ); ?>
 
         </div><!-- #content -->
