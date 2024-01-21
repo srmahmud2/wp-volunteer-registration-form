@@ -72,10 +72,12 @@ jQuery(document).ready(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert("Volunteer deleted successfully.");
+                        
+                        $('#form-success').text('Volunteer deleted successfully').show();
                         table.ajax.reload(); // Reload the table data
                     } else {
-                        alert("Error: " + response.data);
+                        
+                        $('#form-errors').text('Error deleting volunteer' + response.data).show();
                     }
                 },
                 error: function(xhr, status, error) {

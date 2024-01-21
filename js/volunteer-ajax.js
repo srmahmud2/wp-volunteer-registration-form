@@ -14,22 +14,34 @@ jQuery(document).ready(function($) {
         $('#form-success').html(successHtml).show();
     }
     
-    
+    // Function to clear the form fields
+    function clearForm() {
+        $('#volunteerForm').trigger('reset'); // Resets all form fields
+        // Optionally, reset any additional dynamic elements or UI states
+    }
+
     // Function to handle both registration and edit submissions
     $('#volunteerForm').submit(function(e) {
         e.preventDefault();
 
-        // Determine if it's an edit or new registration
-        var volunteerId = $('#volunteer_id').val();
-        var isEdit = volunteerId && /^\d+$/.test(volunteerId);
+        // Perform client-side validation first
+        if (!validateForm()) {
+            return; // Stop here if validation fails
+        }
+
+        // Extracting the volunteerId and determining the action
+        var volunteerId = $('#volunteer_id_hidden').val();
+        var isEdit = volunteerId && !isNaN(volunteerId) && parseInt(volunteerId, 10) > 0;
         if (isEdit && !volunteerId) {
             alert('Volunteer ID is required and must be numeric.');
             return;
         }
+        var action = isEdit ? 'edit_volunteer' : 'register_volunteer';
 
+        // Preparing formData for AJAX submission
         var formData = new FormData(this);
+        formData.append('action', action);
         formData.append('security', isEdit ? volunteer_ajax_obj.edit_nonce : volunteer_ajax_obj.register_nonce);
-        formData.append('action', isEdit ? 'edit_volunteer' : 'register_volunteer');      
 
         $.ajax({
             url: volunteer_ajax_obj.ajaxurl,
@@ -51,6 +63,14 @@ jQuery(document).ready(function($) {
                 } else {
                     // Handle success, e.g., clear the form, display a success message, or redirect
                     displaySuccess([response.data || 'Operation successful']);
+                    // If it's an edit operation
+                    if (isEdit) {
+                        // Redirect to the previous page
+                        // window.history.back();
+                    } else {
+                        // For new registration, clear the form or perform other actions
+                        clearForm();
+                    }
                 }
             },
             error: function() {
@@ -60,7 +80,7 @@ jQuery(document).ready(function($) {
         });
     });
  
-     // Function to populate form fields with current id data
+     // Helper Function for fetchAndPopulateVolunteerData() to populate form fields with current id's data
      function populateFormWithData(data) {
         // Populate the form fields with the data
         $('#volunteer_id').val(data.volunteer_id);

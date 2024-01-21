@@ -13,9 +13,20 @@ function validateForm() {
         element.textContent = "";
     });
 
-    // Form field validations (First Name, Last Name, Email, etc.)
-    // ... (same validation logic as before)
+    // Validate volunteer_id 
+    // console.log("Form Element: ", document.forms["volunteerForm"]);
 
+    var volunteerId = document.forms["volunteerForm"]["volunteer_id"].value;
+    if (!volunteerId || !/^\d+$/.test(volunteerId) || parseInt(volunteerId, 10) <= 0) {
+        setError('volunteer_id', "Invalid Volunteer ID. It must be a positive number.");
+        valid = false;
+    }
+
+    // console.log("Volunteer ID: ", volunteerId); 
+    //console.log("Form Object: ", document.forms["volunteerForm"]);
+    // console.log("Typeof volunteerId: ", typeof volunteerId);
+    // console.log("Regex Test: ", /^\d+$/.test(volunteerId));
+    // console.log("parseInt Check: ", parseInt(volunteerId, 10) > 0);
     // Validate 'data_inscricao' (date field)
     var dataInscricao = document.forms["volunteerForm"]["data_inscricao"].value;
     if (dataInscricao === "") {

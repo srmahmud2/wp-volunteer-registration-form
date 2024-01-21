@@ -43,13 +43,16 @@ get_header();
             <form id="volunteerForm" method="post">
                 <?php wp_nonce_field('volunteer_form_nonce', 'nonce_field'); ?>
                 <input type="hidden" name="action" value="<?php echo $is_edit_mode ? 'edit_volunteer_form' : 'register_volunteer_form'; ?>"/>
-                <input type="hidden" name="volunteer_id" value="<?php echo $is_edit_mode ? esc_attr($volunteer_id) : ''; ?>"/>
+                <input type="hidden" name="volunteer_id_hidden" value="<?php echo $is_edit_mode ? esc_attr($volunteer_id) : ''; ?>"/>
 
                 <!-- //display error/success message here -->
                 <div id="form-errors" class="text-danger" style="display: none;"></div>
                 <div id="form-success" class="text-success" style="display: none;"></div>
+                <?php if (!empty($message)): ?>
+                    <p id="registration-message"><?php echo esc_html($message); ?></p>
+                <?php endif; ?>
 
-
+                <!-- // form input stats -->
                 <div class="form-group">
                     <label for="volunteer_id">ID</label>
                     <input type="number" name="volunteer_id" id="volunteer_id" placeholder="Enter ID">
@@ -169,9 +172,6 @@ get_header();
                 
                 <div class="form-group submit">
                     <input type="submit" name="register" value="<?php echo $is_edit_mode ? 'Update' : 'Register'; ?>">
-                    <?php if (!empty($message)): ?>
-                        <p id="registration-message"><?php echo esc_html($message); ?></p>
-                    <?php endif; ?>
                 </div>
 
             </form>
