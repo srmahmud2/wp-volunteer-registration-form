@@ -66,17 +66,39 @@ function register_volunteer() {
     global $wpdb; // database connection
 	check_ajax_referer('register-volunteer-nonce', 'security');
 	
-	// Extracting, Validate and sanitizing input data
-	$volunteer_id = isset($_POST['volunteer_id']) && is_numeric($_POST['volunteer_id']) && $_POST['volunteer_id'] > 0 ? intval($_POST['volunteer_id']) : null;
+	// Extracting and validating 'volunteer_id'
+    $volunteer_id = isset($_POST['volunteer_id']) ? $_POST['volunteer_id'] : null;
+    // Validate 'volunteer_id' if not empty
+    if ($volunteer_id !== null) {
+        // Check if it's numeric and greater than 0
+        if (!is_numeric($volunteer_id) || intval($volunteer_id) <= 0) {
+            wp_send_json_error('Invalid Volunteer ID. It must be a positive number.');
+            wp_die();
+        }
+        // Check if volunteer_id already exists in the database
+        $existing_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}volunteers WHERE volunteer_id = %d", intval($volunteer_id)));
+        if ($existing_id) {
+            wp_send_json_error('Volunteer ID already exists. Please use a unique ID.');
+            wp_die();
+        }
+    }
+    // Convert $volunteer_id to integer if not null
+    $volunteer_id = $volunteer_id !== null ? intval($volunteer_id) : null;
+    
 	//validate data_inscricao date
 	$data_inscricao = isset($_POST['data_inscricao']) ? $_POST['data_inscricao'] : '';
 	$validated_date = DateTime::createFromFormat('Y-m-d', $data_inscricao);
 	$is_valid_date = $validated_date && $validated_date->format('Y-m-d') === $data_inscricao;
-	// Sanitize the valid date
+	if (!$is_valid_date) {
+		wp_send_json_error('Invalid inscrição date. Please enter a valid date.');
+		wp_die();
+	}
 	$data_inscricao = sanitize_text_field($data_inscricao);
 
-    $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
-	$is_valid_first_name = !empty($first_name) && ctype_alpha(str_replace(' ', '', $first_name));
+    // Extract, validate, and sanitize input data
+	$first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
+	$first_name = preg_replace('/\s+/', ' ', trim($first_name)); 	
+	$is_valid_first_name = !empty($first_name) && preg_match('/^[a-zA-Z ]+$/', $first_name);
 	if (!$is_valid_first_name) {
 		// Handle the error, e.g., by sending a JSON error response or setting an error flag
 		wp_send_json_error('Invalid first name. Please enter a valid text.');
@@ -84,7 +106,8 @@ function register_volunteer() {
 	}
 
     $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
-	$is_valid_last_name = !empty($last_name) && ctype_alpha(str_replace(' ', '', $last_name));
+	$last_name = preg_replace('/\s+/', ' ', trim($last_name)); 	
+	$is_valid_last_name = !empty($last_name) && preg_match('/^[a-zA-Z ]+$/', $last_name);
 	if (!$is_valid_last_name) {
 		// Handle the error, e.g., by sending a JSON error response or setting an error flag
 		wp_send_json_error('Invalid first name. Please enter a valid text.');
@@ -93,11 +116,46 @@ function register_volunteer() {
 
 
 
-    $post_code = isset($_POST['post_code']) ? sanitize_text_field($_POST['post_code']) : '';
+    // ... similar for other fields
+	$post_code = isset($_POST['post_code']) ? sanitize_text_field($_POST['post_code']) : '';
+	$post_code = preg_replace('/\s+/', ' ', trim($post_code));
+	$is_valid_post_code = !empty($post_code);
+	if (!$is_valid_post_code) {
+		// Handle the error, e.g., by sending a JSON error response or setting an error flag
+		wp_send_json_error('Please enter post code');
+		wp_die();
+	}
+
 	$morada = isset($_POST['morada']) ? sanitize_text_field($_POST['morada']) : '';
-	$localidade = isset($_POST['localidade']) ? sanitize_text_field($_POST['localidade']) : '';
-	$telemovel = isset($_POST['telemovel']) ? preg_replace('/[^\d\+]|^\+?(00)/', '', $_POST['telemovel']) : '';
+	
+    $localidade = isset($_POST['localidade']) ? sanitize_text_field($_POST['localidade']) : '';
+	$localidade = preg_replace('/\s+/', ' ', trim($localidade));	
+	$is_valid_localidade = !empty($localidade);
+	if (!$is_valid_localidade) {
+		// Handle the error, e.g., by sending a JSON error response or setting an error flag
+		wp_send_json_error('Invalid first name. Please enter a valid text.');
+		wp_die();
+	}
+
+	$telemovel = isset($_POST['telemovel']) ? preg_match('/^\+?\d{1,4}[\s-]?\d{1,15}$/', '', $_POST['telemovel']) : '';
+	$is_valid_telemovel = !empty($telemovel);
+	if (!$is_valid_telemovel) {
+		wp_send_json_error('Invalid phone number. Please include country code and use a valid format like +351 123456789.');
+		wp_die();
+	}
+
+	// Sanitize and validate email
 	$volunteer_email = isset($_POST['volunteer_email']) ? sanitize_email($_POST['volunteer_email']) : '';
+	if (!is_email($volunteer_email)) {
+		wp_send_json_error('Invalid email format.');
+		wp_die();
+	}
+	// Unique Email Check
+	$existing_email = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email));
+	if ($existing_email) {
+		wp_send_json_error('This email is already registered. Please use a different email.');
+		wp_die();
+	}
 	$education = isset($_POST['education']) ? sanitize_text_field($_POST['education']) : '';
 	$profession = isset($_POST['profession']) ? sanitize_text_field($_POST['profession']) : '';
 	$encaminhado = isset($_POST['encaminhado']) ? sanitize_text_field($_POST['encaminhado']) : '';
@@ -106,6 +164,10 @@ function register_volunteer() {
 	$a_date = isset($_POST['a_date']) ? $_POST['a_date'] : '';
 	$validated_a_date = DateTime::createFromFormat('Y-m-d', $a_date);
 	$is_valid_a_date = $validated_a_date && $validated_a_date->format('Y-m-d') === $a_date;
+    if (!$is_valid_a_date) {
+		wp_send_json_error('Invalid A date. Please enter a valid date.');
+		wp_die();
+	}
 	// Sanitize the valid date
 	$a_date = sanitize_text_field($a_date);
 
@@ -187,8 +249,24 @@ function edit_volunteer() {
 		wp_die();
 	}
 	// Extracting and validating 'volunteer_id'
-    $volunteer_id = isset($_POST['volunteer_id']) && is_numeric($_POST['volunteer_id']) && $_POST['volunteer_id'] > 0 ? intval($_POST['volunteer_id']) : null;
-
+    $volunteer_id = isset($_POST['volunteer_id']) ? $_POST['volunteer_id'] : null;
+    // Validate 'volunteer_id' if not empty
+    if ($volunteer_id !== null) {
+        // Check if it's numeric and greater than 0
+        if (!is_numeric($volunteer_id) || intval($volunteer_id) <= 0) {
+            wp_send_json_error('Invalid Volunteer ID. It must be a positive number.');
+            wp_die();
+        }
+        // Check if volunteer_id already exists in the database
+        $existing_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}volunteers WHERE volunteer_id = %d", intval($volunteer_id)));
+        if ($existing_id) {
+            wp_send_json_error('Volunteer ID already exists. Please use a unique ID.');
+            wp_die();
+        }
+    }
+    // Convert $volunteer_id to integer if not null
+    $volunteer_id = $volunteer_id !== null ? intval($volunteer_id) : null;
+    
 	// Sanitize & Validate 'data_inscricao' date
 	$data_inscricao = isset($_POST['data_inscricao']) ? $_POST['data_inscricao'] : '';
 	$validated_date = DateTime::createFromFormat('Y-m-d', $data_inscricao);
@@ -208,6 +286,7 @@ function edit_volunteer() {
 		wp_send_json_error('Invalid first name. Please enter a valid text.');
 		wp_die();
 	}
+
     $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
 	$last_name = preg_replace('/\s+/', ' ', trim($last_name)); 	
 	$is_valid_last_name = !empty($last_name) && preg_match('/^[a-zA-Z ]+$/', $last_name);
@@ -226,8 +305,8 @@ function edit_volunteer() {
 		wp_send_json_error('Please enter post code');
 		wp_die();
 	}
+
 	$morada = isset($_POST['morada']) ? sanitize_text_field($_POST['morada']) : '';
-	
 	$localidade = isset($_POST['localidade']) ? sanitize_text_field($_POST['localidade']) : '';
 	$localidade = preg_replace('/\s+/', ' ', trim($localidade));	
 	$is_valid_localidade = !empty($localidade);
@@ -237,19 +316,40 @@ function edit_volunteer() {
 		wp_die();
 	}
 
-	$telemovel = isset($_POST['telemovel']) ? preg_replace('/[^\d\+]|^\+?(00)/', '', $_POST['telemovel']) : '';
+	$telemovel = isset($_POST['telemovel']) ? preg_match('/^\+?\d{1,4}[\s-]?\d{1,15}$/', '', $_POST['telemovel']) : '';
+	$is_valid_telemovel = !empty($telemovel);
+	if (!$is_valid_telemovel) {
+		wp_send_json_error('Invalid phone number. Please include country code and use a valid format like +351 123456789.');
+		wp_die();
+	}
+
+	// Sanitize and validate email
 	$volunteer_email = isset($_POST['volunteer_email']) ? sanitize_email($_POST['volunteer_email']) : '';
+	if (!is_email($volunteer_email)) {
+		wp_send_json_error('Invalid email format.');
+		wp_die();
+	}
+	// Unique Email Check
+	$existing_email = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email));
+	if ($existing_email) {
+		wp_send_json_error('This email is already registered. Please use a different email.');
+		wp_die();
+	}
 	$education = isset($_POST['education']) ? sanitize_text_field($_POST['education']) : '';
 	$profession = isset($_POST['profession']) ? sanitize_text_field($_POST['profession']) : '';
 	$encaminhado = isset($_POST['encaminhado']) ? sanitize_text_field($_POST['encaminhado']) : '';
 	
-	$a_date = isset($_POST['a_date']) ? $_POST['a_date'] : '';
 	// Validate and sanitize 'a_date'
 	$a_date = isset($_POST['a_date']) ? $_POST['a_date'] : '';
 	$validated_a_date = DateTime::createFromFormat('Y-m-d', $a_date);
 	$is_valid_a_date = $validated_a_date && $validated_a_date->format('Y-m-d') === $a_date;
+    if (!$is_valid_a_date) {
+		wp_send_json_error('Invalid A date. Please enter a valid date.');
+		wp_die();
+	}
 	// Sanitize the valid date
 	$a_date = sanitize_text_field($a_date);
+
 	$pref1 = isset($_POST['pref1']) ? sanitize_text_field($_POST['pref1']) : '';
 	$pref2 = isset($_POST['pref2']) ? sanitize_text_field($_POST['pref2']) : '';
 	$pref3 = isset($_POST['pref3']) ? sanitize_text_field($_POST['pref3']) : '';
@@ -308,7 +408,6 @@ function edit_volunteer() {
 
     wp_die(); // to terminate immediately and return a proper response
 }
-
 add_action('wp_ajax_edit_volunteer', 'edit_volunteer'); // Hook for logged-in users
 add_action('wp_ajax_nopriv_edit_volunteer', 'edit_volunteer'); // Hook for non-logged-in users
 
