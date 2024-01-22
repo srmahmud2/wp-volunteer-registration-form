@@ -1,15 +1,13 @@
 <?php 
 /* Template Name: Data Form */ 
-$is_edit_mode = false;
 
-// Check if we are in edit mode (ID is passed)
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $is_edit_mode = true;
-    $volunteer_id = $_GET['id'];
-}
+// Determine if in edit mode based on 'id' parameter in query string
+$is_edit_mode = isset($_GET['id']) && is_numeric($_GET['id']);
+$my_id = $is_edit_mode ? $_GET['id'] : '';
 
-$message = get_transient('registration_message'); // Fetch the message set in functions.php
-delete_transient('registration_message'); // Delete the transient to prevent message persistence
+// Retrieve and delete the transient registration message
+$message = get_transient('registration_message');
+delete_transient('registration_message');
 
 get_header(); 
 ?>
@@ -39,11 +37,14 @@ get_header();
 				// Elementor `single` location.
 				if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'single' ) ) {
 ?>
-           
+
+
+
             <form id="volunteerForm" method="post">
                 <?php wp_nonce_field('volunteer_form_nonce', 'nonce_field'); ?>
                 <input type="hidden" name="action" value="<?php echo $is_edit_mode ? 'edit_volunteer_form' : 'register_volunteer_form'; ?>"/>
-                <input type="hidden" name="volunteer_id_hidden" value="<?php echo $is_edit_mode ? esc_attr($volunteer_id) : ''; ?>"/>
+                <input type="hidden" name="my_id" id="my_id" value="<?php echo $is_edit_mode ? esc_attr($my_id) : ''; ?>"/>
+
 
                 <!-- //display error/success message here -->
                 <div id="form-errors" class="text-danger" style="display: none;"></div>

@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
         },
         "createdRow": function(row, data, dataIndex) {
             // Assuming 'data' has a property 'id' which is the volunteer ID
-            $(row).attr('data-id', data.id);
+            $(row).attr('data-id', data.my_id);
         },
         // ... other DataTable options ...
         "columns": [
@@ -19,7 +19,7 @@ jQuery(document).ready(function($) {
             {
                 "data": null,
                 "render": function(data, type, row) {
-                    return '<a href="volunteer-registration-form/?id=' + row.id + '" class="text-primary edit-button"><i class="fas fa-pencil-alt"></i></a>';
+                    return '<a href="volunteer-registration-form/?id=' + row.my_id + '" class="text-primary edit-button"><i class="fas fa-pencil-alt"></i></a>';
                 }
             },            
             {
@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
             },
             
             // Columns for each field
-            { "data": "id" },
+            { "data": "my_id" },
             { "data": "volunteer_id" },
             { "data": "data_inscricao" },
             { "data": "first_name" },
@@ -54,13 +54,13 @@ jQuery(document).ready(function($) {
     // Event listener for delete buttons
     $('#volunteerTable').on('click', '.delete-button', function(e) {
         e.preventDefault();
-        var volunteerId = $(this).closest('tr').data('id');
-        deleteVolunteer(volunteerId);
+        var myId = $(this).closest('tr').data('id');
+        deleteVolunteer(myId);
     });
 
     // Delete volunteer function
-    function deleteVolunteer(volunteerId) {
-        console.log("Deleting volunteer with ID:", volunteerId);
+    function deleteVolunteer(myId) {
+        // console.log("Deleting volunteer with ID:", myId);
         if (confirm('Are you sure you want to delete this?')) {
             $.ajax({
                 url: volunteer_datatables_obj.ajaxurl,
@@ -68,7 +68,7 @@ jQuery(document).ready(function($) {
                 data: {
                     action: 'delete_volunteer', // Match this with your PHP action hook
                     security: volunteer_datatables_obj.delete_nonce, 
-                    volunteer_id: volunteerId
+                    my_id: myId
                 },
                 success: function(response) {
                     if (response.success) {

@@ -18,7 +18,7 @@ function validateForm() {
 
     var volunteerId = document.forms["volunteerForm"]["volunteer_id"].value;
     if (!volunteerId || !/^\d+$/.test(volunteerId) || parseInt(volunteerId, 10) <= 0) {
-        setError('volunteer_id', "Invalid Volunteer ID. It must be a positive number.");
+        setError('volunteer_id', "Invalid Volunteer Number");
         valid = false;
     }
 

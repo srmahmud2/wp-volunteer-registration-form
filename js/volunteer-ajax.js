@@ -29,20 +29,23 @@ jQuery(document).ready(function($) {
             return; // Stop here if validation fails
         }
 
-        // Extracting the volunteerId and determining the action
-        var volunteerId = $('#volunteer_id_hidden').val();
-        var isEdit = volunteerId && !isNaN(volunteerId) && parseInt(volunteerId, 10) > 0;
-        if (isEdit && !volunteerId) {
+        // Extracting the my_id and determining the action
+        var myId = $('#my_id').val();
+        var isEdit = myId && !isNaN(myId) && parseInt(myId, 10) > 0;
+        if (isEdit && !myId) {
             alert('Volunteer ID is required and must be numeric.');
             return;
         }
         var action = isEdit ? 'edit_volunteer' : 'register_volunteer';
-
         // Preparing formData for AJAX submission
         var formData = new FormData(this);
         formData.append('action', action);
         formData.append('security', isEdit ? volunteer_ajax_obj.edit_nonce : volunteer_ajax_obj.register_nonce);
-
+    
+        if (isEdit) {
+            formData.append('my_id', myId); // Add my_id to the formData for edit operation
+        }
+        // AJAX request...
         $.ajax({
             url: volunteer_ajax_obj.ajaxurl,
             type: 'POST',
@@ -100,21 +103,20 @@ jQuery(document).ready(function($) {
         $('#pref2').val(data.pref2);
         $('#pref3').val(data.pref3);
         $('#pref_other').val(data.pref_other);
-        // ...populate other fields similarly
     }
 
     // Function to fetch and populate volunteer data for editing
     function fetchAndPopulateVolunteerData() {
         var urlParams = new URLSearchParams(window.location.search);
-        var volunteerId = urlParams.get('id');
+        var myId  = urlParams.get('id');
 
-        if (volunteerId) {
+        if (myId ) {
             $.ajax({
                 url: volunteer_ajax_obj.ajaxurl,
                 type: 'POST',
                 data: {
                     action: 'fetch_volunteer_data',
-                    volunteer_id: volunteerId,
+                    my_id: myId, 
                     security: volunteer_ajax_obj.fetchToEdit_nonce
                 },
                 success: function(response) {

@@ -180,30 +180,37 @@ function edit_volunteer() {
     global $wpdb; // Assuming $wpdb is your database connection
 	check_ajax_referer('edit-volunteer-nonce', 'security');
 
-    // Extracting and validating 'volunteer_id'
+	// Extracting and validating 'my_id'
+	$my_id = isset($_POST['my_id']) && is_numeric($_POST['my_id']) && $_POST['my_id'] > 0 ? intval($_POST['my_id']) : null;
+	if (!$my_id) {
+		wp_send_json_error('Invalid Volunteer ID');
+		wp_die();
+	}
+	// Extracting and validating 'volunteer_id'
     $volunteer_id = isset($_POST['volunteer_id']) && is_numeric($_POST['volunteer_id']) && $_POST['volunteer_id'] > 0 ? intval($_POST['volunteer_id']) : null;
-    if (!$volunteer_id) {
-        wp_send_json_error('Invalid Volunteer ID');
-        wp_die();
-    }
 
+	// Sanitize & Validate 'data_inscricao' date
 	$data_inscricao = isset($_POST['data_inscricao']) ? $_POST['data_inscricao'] : '';
 	$validated_date = DateTime::createFromFormat('Y-m-d', $data_inscricao);
 	$is_valid_date = $validated_date && $validated_date->format('Y-m-d') === $data_inscricao;
-	// Sanitize the valid date
+	if (!$is_valid_date) {
+		wp_send_json_error('Invalid inscrição date. Please enter a valid date.');
+		wp_die();
+	}
 	$data_inscricao = sanitize_text_field($data_inscricao);
 
 	// Extract, validate, and sanitize input data
 	$first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
-	$is_valid_first_name = !empty($first_name) && ctype_alpha(str_replace(' ', '', $first_name));
+	$first_name = preg_replace('/\s+/', ' ', trim($first_name)); 	
+	$is_valid_first_name = !empty($first_name) && preg_match('/^[a-zA-Z ]+$/', $first_name);
 	if (!$is_valid_first_name) {
 		// Handle the error, e.g., by sending a JSON error response or setting an error flag
 		wp_send_json_error('Invalid first name. Please enter a valid text.');
 		wp_die();
 	}
-
     $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
-	$is_valid_last_name = !empty($last_name) && ctype_alpha(str_replace(' ', '', $last_name));
+	$last_name = preg_replace('/\s+/', ' ', trim($last_name)); 	
+	$is_valid_last_name = !empty($last_name) && preg_match('/^[a-zA-Z ]+$/', $last_name);
 	if (!$is_valid_last_name) {
 		// Handle the error, e.g., by sending a JSON error response or setting an error flag
 		wp_send_json_error('Invalid first name. Please enter a valid text.');
@@ -212,8 +219,24 @@ function edit_volunteer() {
 	
     // ... similar for other fields
 	$post_code = isset($_POST['post_code']) ? sanitize_text_field($_POST['post_code']) : '';
+	$post_code = preg_replace('/\s+/', ' ', trim($post_code));
+	$is_valid_post_code = !empty($post_code);
+	if (!$is_valid_post_code) {
+		// Handle the error, e.g., by sending a JSON error response or setting an error flag
+		wp_send_json_error('Please enter post code');
+		wp_die();
+	}
 	$morada = isset($_POST['morada']) ? sanitize_text_field($_POST['morada']) : '';
+	
 	$localidade = isset($_POST['localidade']) ? sanitize_text_field($_POST['localidade']) : '';
+	$localidade = preg_replace('/\s+/', ' ', trim($localidade));	
+	$is_valid_localidade = !empty($localidade);
+	if (!$is_valid_localidade) {
+		// Handle the error, e.g., by sending a JSON error response or setting an error flag
+		wp_send_json_error('Invalid first name. Please enter a valid text.');
+		wp_die();
+	}
+
 	$telemovel = isset($_POST['telemovel']) ? preg_replace('/[^\d\+]|^\+?(00)/', '', $_POST['telemovel']) : '';
 	$volunteer_email = isset($_POST['volunteer_email']) ? sanitize_email($_POST['volunteer_email']) : '';
 	$education = isset($_POST['education']) ? sanitize_text_field($_POST['education']) : '';
@@ -276,8 +299,9 @@ function edit_volunteer() {
 		'%s', // pref_other
 	);
 
-    if ($wpdb->update($table_name, $data, array('ID' => $volunteer_id), $format, array('%d')) !== false) {
+	if ($wpdb->update($table_name, $data, array('my_id' => $my_id), $format) !== false) {
         wp_send_json_success('Volunteer updated successfully.');
+    
     } else {
         wp_send_json_error('Error in updating volunteer.');
     }
@@ -311,16 +335,15 @@ function delete_volunteer() {
     global $wpdb;
     check_ajax_referer('delete-volunteer-nonce', 'security');
 
-    // $volunteer_id = isset($_POST['volunteer_id']) ? intval($_POST['volunteer_id']) : 0;
-	// Extracting and validating 'volunteer_id'
-    $volunteer_id = isset($_POST['volunteer_id']) && is_numeric($_POST['volunteer_id']) && $_POST['volunteer_id'] > 0 ? intval($_POST['volunteer_id']) : null;
-    if (!$volunteer_id) {
-        wp_send_json_error('Invalid Volunteer ID');
+    // Extracting and validating 'my_id' from the AJAX request
+    $my_id = isset($_POST['my_id']) && is_numeric($_POST['my_id']) && $_POST['my_id'] > 0 ? intval($_POST['my_id']) : null;
+    if (!$my_id) {
+        wp_send_json_error('Invalid Volunteer Row ID');
         wp_die();
     }
 
     $table_name = $wpdb->prefix . 'volunteers';
-    $result = $wpdb->delete($table_name, array('id' => $volunteer_id), array('%d'));
+    $result = $wpdb->delete($table_name, array('my_id' => $my_id), array('%d'));
 
     if ($result) {
         wp_send_json_success('Volunteer deleted successfully');
@@ -331,6 +354,7 @@ function delete_volunteer() {
     wp_die(); // Required to terminate and return a proper response
 }
 
+
 add_action('wp_ajax_delete_volunteer', 'delete_volunteer'); // Hook for logged-in users
 add_action('wp_ajax_nopriv_delete_volunteer', 'delete_volunteer'); // Hook for non-logged-in users
 
@@ -339,16 +363,14 @@ function fetch_volunteer_data() {
     global $wpdb;
     check_ajax_referer('fetch-volunteer-data-nonce', 'security'); //check referer er first parameter diyei wp_create_nonce kora lage
 
-    // $volunteer_id = isset($_POST['volunteer_id']) ? intval($_POST['volunteer_id']) : 0;
-	// Extracting and validating 'volunteer_id'
-	$volunteer_id = isset($_POST['volunteer_id']) && is_numeric($_POST['volunteer_id']) && $_POST['volunteer_id'] > 0 ? intval($_POST['volunteer_id']) : null;
-	if (!$volunteer_id) {
-		wp_send_json_error('Invalid Volunteer ID');
-		wp_die();
-	}
-
+	// Extracting and validating 'my_id'
+    $my_id = isset($_POST['my_id']) && is_numeric($_POST['my_id']) && $_POST['my_id'] > 0 ? intval($_POST['my_id']) : null;
+    if (!$my_id) {
+        wp_send_json_error('Invalid Volunteer ID');
+        wp_die();
+    }
     $table_name = $wpdb->prefix . 'volunteers';
-    $volunteer_data = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $volunteer_id), ARRAY_A);
+    $volunteer_data = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_name} WHERE my_id = %d", $my_id), ARRAY_A);
 
     if ($volunteer_data) {
         wp_send_json_success($volunteer_data);

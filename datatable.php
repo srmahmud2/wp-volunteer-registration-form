@@ -40,20 +40,20 @@ function renderTableHeaderFooter() {
     echo '</tr>';
 }
 ?>
-<div class="datatable-area">
-	<!-- //display error/success message here -->
-	<div id="form-errors" class="text-danger" style="display: none;"></div>
-	<div id="form-success" class="text-success" style="display: none;"></div>
-    <table id="volunteerTable" class="table table-striped volunteer-table" style="width:100%">
-        <thead>
-            <?php renderTableHeaderFooter(); ?>
-        </thead>
-        <!-- <tbody> dynamically generated from volunteer-datatables -->
-        <tfoot>
-            <?php renderTableHeaderFooter(); ?>
-        </tfoot>
-    </table>
-</div>
+					<div class="datatable-area">
+						<!-- //display error/success message here -->
+						<div id="form-errors" class="text-danger" style="display: none;"></div>
+						<div id="form-success" class="text-success" style="display: none;"></div>
+						<table id="volunteerTable" class="table table-striped volunteer-table" style="width:100%">
+							<thead>
+								<?php renderTableHeaderFooter(); ?>
+							</thead>
+							<!-- <tbody> dynamically generated from volunteer-datatables -->
+							<tfoot>
+								<?php renderTableHeaderFooter(); ?>
+							</tfoot>
+						</table>
+					</div>
 <?php
 					// Start loop.
 					while ( have_posts() ) :
