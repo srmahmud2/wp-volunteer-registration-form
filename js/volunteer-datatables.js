@@ -61,7 +61,8 @@ jQuery(document).ready(function($) {
     // Delete volunteer function
     function deleteVolunteer(myId) {
         // console.log("Deleting volunteer with ID:", myId);
-        if (confirm('Are you sure you want to delete this?')) {
+        if (confirm('Are you sure you want to delete this?' + myId)) {
+            showSpinner();
             $.ajax({
                 url: volunteer_datatables_obj.ajaxurl,
                 type: 'POST',
@@ -72,16 +73,22 @@ jQuery(document).ready(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        
-                        $('#form-success').text('Volunteer deleted successfully').show();
+                        showMessageWithZoomOutEffect('Volunteer deleted successfully', 'success');
+                        // $('#form-success').text('Volunteer deleted successfully from').show();
                         table.ajax.reload(); // Reload the table data
+                        hideSpinner();
                     } else {
-                        
-                        $('#form-errors').text('Error deleting volunteer' + response.data).show();
+                        var errorMessage = 'Error deleting volunteer: ' + (response.data || 'Unknown error');
+                        showMessageWithZoomOutEffect(errorMessage, 'error');
+                        // $('#form-errors').text('Error deleting volunteer' + response.data).show();
+                        hideSpinner();
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error: ", status, error);
+                    // console.error("Error: ", status, error);
+                    var errorMessage = "Error: " + status + " " + error;
+                    showMessageWithZoomOutEffect(errorMessage, 'error');
+                    hideSpinner();
                 }
             });
         }

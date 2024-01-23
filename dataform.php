@@ -37,26 +37,15 @@ get_header();
 				// Elementor `single` location.
 				if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'single' ) ) {
 ?>
-
-
-
             <form id="volunteerForm" method="post">
                 <?php wp_nonce_field('volunteer_form_nonce', 'nonce_field'); ?>
                 <input type="hidden" name="action" value="<?php echo $is_edit_mode ? 'edit_volunteer_form' : 'register_volunteer_form'; ?>"/>
                 <input type="hidden" name="my_id" id="my_id" value="<?php echo $is_edit_mode ? esc_attr($my_id) : ''; ?>"/>
 
-
-                <!-- //display error/success message here -->
-                <div id="form-errors" class="text-danger" style="display: none;"></div>
-                <div id="form-success" class="text-success" style="display: none;"></div>
-                <?php if (!empty($message)): ?>
-                    <p id="registration-message"><?php echo esc_html($message); ?></p>
-                <?php endif; ?>
-
                 <!-- // form input stats -->
                 <div class="form-group">
                     <label for="volunteer_id">ID</label>
-                    <input type="number" name="volunteer_id" id="volunteer_id" placeholder="Enter ID">
+                    <input type="number" name="volunteer_id" id="volunteer_id" placeholder="Enter ID" <?php echo $is_edit_mode ? 'disabled' : ''; ?>>
                     <span class="error-message" id="error-volunteer_id"></span>
                 </div>
 
@@ -173,8 +162,20 @@ get_header();
                 
                 <div class="form-group submit">
                     <input type="submit" name="register" value="<?php echo $is_edit_mode ? 'Update' : 'Register'; ?>">
+                    <!-- Spinner Element -->
+                    <div id="spinner" class="fa-3x" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
                 </div>
+                
+                <!-- //display error/success message here -->
+                
 
+                <div id="form-errors" class="text-danger" style="display: none;"></div>
+                <div id="form-success" class="text-success" style="display: none;"></div>
+                <?php if (!empty($message)): ?>
+                    <p id="registration-message"><?php echo esc_html($message); ?></p>
+                <?php endif; ?>
             </form>
 
             <?php

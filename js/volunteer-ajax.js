@@ -1,17 +1,23 @@
 jQuery(document).ready(function($) {
+
+
+
     // Function to display error messages
     function displayErrors(errors) {
         var errorsHtml = errors.map(function(error) {
             return '<span>' + error + '</span>';
         }).join('');
-        $('#form-errors').html(errorsHtml).show();
+        // $('#form-errors').html(errorsHtml).show();
+        showMessageWithZoomOutEffect(errorsHtml, 'error');
+
     }
+    
     //Function to display success message
     function displaySuccess(success){
         var successHtml = success.map(function(success) {
             return '<span>' + success + '</span>';
         }).join('');
-        $('#form-success').html(successHtml).show();
+        showMessageWithZoomOutEffect(successHtml, 'success');
     }
     
     // Function to clear the form fields
@@ -45,6 +51,7 @@ jQuery(document).ready(function($) {
         if (isEdit) {
             formData.append('my_id', myId); // Add my_id to the formData for edit operation
         }
+        showSpinner();
         // AJAX request...
         $.ajax({
             url: volunteer_ajax_obj.ajaxurl,
@@ -59,25 +66,31 @@ jQuery(document).ready(function($) {
                     if (response.errors) {
                         // Handle server-side validation errors
                         handleServerSideErrors(response.errors);
+                        hideSpinner();
                     } else {
                         // Handle other kinds of errors
                         displayErrors([response.data || 'An unknown error occurred.']);
+                        hideSpinner();
                     }
                 } else {
                     // Handle success, e.g., clear the form, display a success message, or redirect
                     displaySuccess([response.data || 'Operation successful']);
+                    hideSpinner();
                     // If it's an edit operation
                     if (isEdit) {
                         // Redirect to the previous page
                         // window.history.back();
+                        hideSpinner();
                     } else {
                         // For new registration, clear the form or perform other actions
+                        hideSpinner();
                         clearForm();
                     }
                 }
             },
             error: function() {
                 displayErrors(['Failed to send request. Please try again.']);
+                hideSpinner();
             }
 
         });
@@ -109,8 +122,8 @@ jQuery(document).ready(function($) {
     function fetchAndPopulateVolunteerData() {
         var urlParams = new URLSearchParams(window.location.search);
         var myId  = urlParams.get('id');
-
         if (myId ) {
+            showSpinner();
             $.ajax({
                 url: volunteer_ajax_obj.ajaxurl,
                 type: 'POST',
@@ -122,12 +135,15 @@ jQuery(document).ready(function($) {
                 success: function(response) {
                     if (response.success) {
                         populateFormWithData(response.data);
+                        hideSpinner();
                     } else {
                         displayErrors([response.data || 'Failed to fetch data.']);
+                        hideSpinner();
                     }
                 },
                 error: function() {
                     displayErrors(['Failed to send request. Please try again.']);
+                    hideSpinner();
                 }
             });
         }

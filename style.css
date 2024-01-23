@@ -4,8 +4,11 @@
  * Template:       oceanwp
  * Text Domain:	   oceanwp-child
  * Description:    Child by Co
- * Version:        4.03
+ * Version:        4.9
+ * Requires PHP: 7.4
  */
+
+
 #volunteerForm {
     display: flex;
     flex-wrap: wrap;
@@ -65,19 +68,28 @@
 
 /* styles for update page */
 #form-errors {
-    display: block;
-    width: 100%;
-    text-align: center;
-    font-weight: bold;
     border: 2px solid #dc3545;
-    padding: 10px;
 }
 
 #form-success {
-    display: block;
+    border: 2px solid #198754;
+}
+
+/* err message zoom out */
+#form-errors,
+#form-success {
     width: 100%;
+    margin: 0 auto;
     text-align: center;
     font-weight: bold;
-    border: 2px solid #198754;
     padding: 10px;
+    transition: transform 1s ease-in-out, opacity 1s ease-in-out;
+}
+
+#spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Add more styles if needed */
 }

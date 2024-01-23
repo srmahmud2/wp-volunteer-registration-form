@@ -41,9 +41,6 @@ function renderTableHeaderFooter() {
 }
 ?>
 					<div class="datatable-area">
-						<!-- //display error/success message here -->
-						<div id="form-errors" class="text-danger" style="display: none;"></div>
-						<div id="form-success" class="text-success" style="display: none;"></div>
 						<table id="volunteerTable" class="table table-striped volunteer-table" style="width:100%">
 							<thead>
 								<?php renderTableHeaderFooter(); ?>
@@ -53,6 +50,13 @@ function renderTableHeaderFooter() {
 								<?php renderTableHeaderFooter(); ?>
 							</tfoot>
 						</table>
+						<div id="spinner" class="fa-3x" style="display: none;">
+							<i class="fas fa-spinner fa-spin"></i>
+						</div>
+						<!-- //display error/success message here -->
+						<div id="form-errors" class="text-danger" style="display: none;"></div>
+						<div id="form-success" class="text-success" style="display: none;"></div>
+						
 					</div>
 <?php
 					// Start loop.
