@@ -1,4 +1,8 @@
 jQuery(document).ready(function($) {
+    // Close the modal when user clicks on 'x' (span.close)
+    $('.close').on('click', function() {
+        $('#deleteConfirmationModal').hide();
+    });
     // Initialize DataTable
     var table = $('#volunteerTable').DataTable({
         "ajax": {
@@ -12,6 +16,9 @@ jQuery(document).ready(function($) {
         "createdRow": function(row, data, dataIndex) {
             // Assuming 'data' has a property 'id' which is the volunteer ID
             $(row).attr('data-id', data.my_id);
+            $(row).attr('data-first-name', data.first_name);
+            $(row).attr('data-last-name', data.last_name);
+
         },
         // ... other DataTable options ...
         "columns": [
@@ -51,17 +58,36 @@ jQuery(document).ready(function($) {
         ]
     });
 
+    
     // Event listener for delete buttons
     $('#volunteerTable').on('click', '.delete-button', function(e) {
         e.preventDefault();
+        
+        // deleteVolunteer(myId);
         var myId = $(this).closest('tr').data('id');
-        deleteVolunteer(myId);
-    });
+        var firstName = $(this).closest('tr').data('first-name');
+        var lastName = $(this).closest('tr').data('last-name');
+        $('#volunteerNameToDelete').text(firstName + " " + lastName);
+        $('#deleteConfirmationModal').show();
+        $('#confirmDelete').off().on('click', function() {
+            deleteVolunteer(myId);
+            $('#deleteConfirmationModal').hide();
+        });
+        $('#cancelDelete').on('click', function() {
+            $('#deleteConfirmationModal').hide();
+        });
 
+        
+
+    });
+    
+    $('.close').on('click', function() {
+        $('#deleteConfirmationModal').hide();
+    });
     // Delete volunteer function
     function deleteVolunteer(myId) {
         // console.log("Deleting volunteer with ID:", myId);
-        if (confirm('Are you sure you want to delete this?' + myId)) {
+        // if (confirm('Are you sure you want to delete this?' + myId)) {
             showSpinner();
             $.ajax({
                 url: volunteer_datatables_obj.ajaxurl,
@@ -91,6 +117,6 @@ jQuery(document).ready(function($) {
                     hideSpinner();
                 }
             });
-        }
+        // }
     }
 });

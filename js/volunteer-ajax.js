@@ -1,7 +1,4 @@
 jQuery(document).ready(function($) {
-
-
-
     // Function to display error messages
     function displayErrors(errors) {
         var errorsHtml = errors.map(function(error) {

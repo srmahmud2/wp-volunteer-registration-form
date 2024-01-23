@@ -25,6 +25,8 @@ function register_volunteer() {
         wp_send_json_error('Volunteer ID already exists.');
         wp_die();
     }
+
+    
     // Extract and validate inputs
     $data_inscricao = validate_input($_POST['data_inscricao'] ?? '', '/^\d{4}-\d{2}-\d{2}$/', 'Invalid inscrição date');
     $first_name = validate_input($_POST['first_name'] ?? '', '/^[a-zA-Z ]+$/', 'Invalid first name');

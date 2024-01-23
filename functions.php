@@ -29,12 +29,6 @@ add_action('after_switch_theme', function() {
     }
 });
 
-
-
-
-
-
-
 // Enqueue scripts and styles
 require get_stylesheet_directory() . '/inc/enqueue-script.php';
 

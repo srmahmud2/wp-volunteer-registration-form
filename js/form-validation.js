@@ -22,12 +22,7 @@ function validateForm() {
         valid = false;
     }
 
-    // console.log("Volunteer ID: ", volunteerId); 
-    //console.log("Form Object: ", document.forms["volunteerForm"]);
-    // console.log("Typeof volunteerId: ", typeof volunteerId);
-    // console.log("Regex Test: ", /^\d+$/.test(volunteerId));
-    // console.log("parseInt Check: ", parseInt(volunteerId, 10) > 0);
-    // Validate 'data_inscricao' (date field)
+
     var dataInscricao = document.forms["volunteerForm"]["data_inscricao"].value;
     if (dataInscricao === "") {
         setError('data_inscricao', "Inscrição date must be filled out");

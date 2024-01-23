@@ -41,6 +41,16 @@ function renderTableHeaderFooter() {
 }
 ?>
 					<div class="datatable-area">
+						<!-- HTML for Delete Confirmation Modal -->
+						<div id="deleteConfirmationModal" class="modal">
+							<div class="modal-content">
+								<span class="close">&times;</span>
+								<p id="deleteMessage">Are you sure you want to delete <span id="volunteerNameToDelete"></span>?</p>
+								<button id="confirmDelete">Yes, Delete</button>
+								<button id="cancelDelete">Cancel</button>
+							</div>
+						</div>
+
 						<table id="volunteerTable" class="table table-striped volunteer-table" style="width:100%">
 							<thead>
 								<?php renderTableHeaderFooter(); ?>
