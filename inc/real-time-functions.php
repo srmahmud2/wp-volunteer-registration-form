@@ -122,14 +122,25 @@ function register_volunteer() {
     check_ajax_referer('register-volunteer-nonce', 'security');
     // Extract and validate volunteer_id
     // $volunteer_id = isset($_POST['volunteer_id']) ? intval($_POST['volunteer_id']) : null;
-    $volunteer_id = isset($_POST['volunteer_id']) ? $_POST['volunteer_id'] : null;
+    // $volunteer_id = isset($_POST['volunteer_id']) ? $_POST['volunteer_id'] : null;
 
     // Check if volunteer_id is provided and is a positive number
-    if ($volunteer_id !== null && $volunteer_id !== '' && (!is_numeric($volunteer_id) || intval($volunteer_id) <= 0)) {
-        wp_send_json_error('Invalid Volunteer number.');
-        wp_die();
+    // if ($volunteer_id !== null && $volunteer_id !== '' && (!is_numeric($volunteer_id) || intval($volunteer_id) <= 0)) {
+    //     wp_send_json_error('Invalid Volunteer number.');
+    //     wp_die();
+    // }
+    if (isset($_POST['volunteer_id']) && $_POST['volunteer_id'] !== '') {
+        if (is_numeric($_POST['volunteer_id']) && intval($_POST['volunteer_id']) > 0) {
+            $volunteer_id = intval($_POST['volunteer_id']);
+        } else {
+            wp_send_json_error('Invalid Volunteer number.');
+            wp_die();
+        }
+    } else {
+        $volunteer_id = null;
     }
-
+    
+    
     // Check if volunteer_id already exists in the database
     if ($volunteer_id !== null && $wpdb->get_var($wpdb->prepare("SELECT my_id FROM {$wpdb->prefix}volunteers WHERE volunteer_id = %d", $volunteer_id))) {
         wp_send_json_error('Volunteer number not available.');

@@ -16,6 +16,7 @@ function oceanwp_child_style() {
     wp_enqueue_script('datatables-bs-js', 'https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js', array('jquery'), '1.13.7', true);
 
     // Enqueue custom scripts
+
     wp_enqueue_script('real-time-script', get_stylesheet_directory_uri() . '/js/real-time.js', array('jquery'), '1.0', true);
 	// Localize the script with necessary data all actions
 	wp_localize_script('real-time-script', 'volunteer_realtime_obj', array(
@@ -24,7 +25,7 @@ function oceanwp_child_style() {
 		'checkEmail_nonce' => wp_create_nonce('unique_email_nonce'),
 		'register_nonce' => wp_create_nonce('register-volunteer-nonce'), // Nonce for registering
 	));
-    // wp_enqueue_script('registration-script', get_stylesheet_directory_uri() . '/js/registration.js', array('jquery'), '1.0', true);
+	wp_enqueue_script('registration-script', get_stylesheet_directory_uri() . '/js/registration.js', array('jquery'), '1.0', true);
     // wp_enqueue_script('form-validation', get_stylesheet_directory_uri() . '/js/form-validation.js', array('jquery'), '1.1', true);
 
 	// Enqueue ajax script to edit volunteer

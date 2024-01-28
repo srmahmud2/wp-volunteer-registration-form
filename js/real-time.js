@@ -284,10 +284,17 @@ jQuery(document).ready(function($) {
         toggleSpinner(false);
         return results.every(result => result.isValid);
     }
+    // Function to clear the form fields
+    function clearForm() {
+        $('#volunteerForm').trigger('reset'); // Resets all form fields
+        // Optionally, reset any additional dynamic elements or UI states
+    }
+    
     // Attach validation to form submission event   
     $('#volunteerForm').on('submit', async function(event) {
         event.preventDefault();
         const isFormValid = await validateForm();
+
         if (isFormValid) {                    
             // Extracting the my_id and determining the action
             var myId = $('#my_id').val();
@@ -304,28 +311,50 @@ jQuery(document).ready(function($) {
             }
                 
             showSpinner();
-            // AJAX request...
             $.ajax({
                 url: volunteer_realtime_obj.ajaxurl,
                 type: 'POST',
                 data: formData,
-                processData: false, // Needed for FormData
+                processData: false,
                 contentType: false,
                 success: function(response) {
-                    // Handle success - You can show a success message or redirect
-                    console.log('Form submitted successfully');
                     hideSpinner();
+                    // if (response.success) {
+                    //     // Displaying the success message from the server
+                    //     $('#form-success').html(response.data).show();
+                    //     $('#form-errors').hide();
+                    //     showMessageWithZoomOutEffect(response.data, 'success');
+                    // } else {
+                    //     // Displaying the error message from the server
+                    //     $('#form-errors').html(response.data).show();
+                    //     $('#form-success').hide();
+                    //     showMessageWithZoomOutEffect(response.data, 'error');
+                    // }
+                    if (response.success) {
+                        // Show the success message
+                        showMessageWithZoomOutEffect(response.data, 'success');
+                    } else {
+                        // Show the error message if the response contains an error
+                        showMessageWithZoomOutEffect(response.data || 'Error occurred.', 'error');
+                    }
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    // Handle errors - You can show an error message
-                    console.error('Error submitting form: ' + textStatus, errorThrown);
+                // error: function(jqXHR) {
+                //     hideSpinner();
+                //     let errorMessage = jqXHR.responseJSON && jqXHR.responseJSON.data ? jqXHR.responseJSON.data : "An unknown error occurred.";
+                //     $('#form-errors').html(errorMessage).show();
+                //     $('#form-success').hide();
+                //     showMessageWithZoomOutEffect(errorMessage, 'error');
+                // },
+                error: function(jqXHR) {
                     hideSpinner();
+                    let errorMessage = jqXHR.responseJSON && jqXHR.responseJSON.data ? jqXHR.responseJSON.data : "An unknown error occurred.";
+                    showMessageWithZoomOutEffect(errorMessage, 'error');
                 }
             });
-        }else {
-            // Form is not valid, don't submit and let the user correct inputs
-            console.log('Form validation failed');
+        } else {
             hideSpinner();
+            // Optionally show a message if form validation fails
+            showMessageWithZoomOutEffect('Please correct the errors in the form.', 'error');
         }
     });
-});
+}); 
