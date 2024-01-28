@@ -284,10 +284,15 @@ jQuery(document).ready(function($) {
         toggleSpinner(false);
         return results.every(result => result.isValid);
     }
-    // Function to clear the form fields
+    // Function to clear the form fields and reset validation states
     function clearForm() {
         $('#volunteerForm').trigger('reset'); // Resets all form fields
-        // Optionally, reset any additional dynamic elements or UI states
+
+        // Remove 'success-message' class from all fields
+        $('#volunteerForm').find('.success-message').removeClass('success-message');
+
+        // Clear all error messages
+        $('.error-message').text('');
     }
     
     // Attach validation to form submission event   
@@ -331,8 +336,9 @@ jQuery(document).ready(function($) {
                     //     showMessageWithZoomOutEffect(response.data, 'error');
                     // }
                     if (response.success) {
-                        // Show the success message
+                        // Show the success message and clear the form
                         showMessageWithZoomOutEffect(response.data, 'success');
+                        clearForm();
                     } else {
                         // Show the error message if the response contains an error
                         showMessageWithZoomOutEffect(response.data || 'Error occurred.', 'error');
