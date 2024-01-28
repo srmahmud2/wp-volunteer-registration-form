@@ -56,7 +56,6 @@ jQuery(document).ready(function($) {
             data: formData,
             contentType: false,
             processData: false,
-
             //success message
             success: function(response) {
                 if (!response.success) {

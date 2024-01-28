@@ -88,7 +88,7 @@ function validateForm() {
     } else {
         document.getElementById('error-a_date').textContent = "";
     }
-    
+
     return valid;
 }
 

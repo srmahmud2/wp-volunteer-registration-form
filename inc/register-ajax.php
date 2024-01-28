@@ -74,3 +74,5 @@ function register_volunteer() {
 }
 add_action('wp_ajax_register_volunteer', 'register_volunteer');
 add_action('wp_ajax_nopriv_register_volunteer', 'register_volunteer');
+
+

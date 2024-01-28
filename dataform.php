@@ -44,13 +44,13 @@ get_header();
 
                 <!-- // form input stats -->
                 <div class="form-group">
-                    <label for="volunteer_id">ID</label>
+                    <label for="volunteer_id">Volunteer Number</label>
                     <input type="number" name="volunteer_id" id="volunteer_id" placeholder="Enter ID" <?php echo $is_edit_mode ? 'disabled' : ''; ?>>
                     <span class="error-message" id="error-volunteer_id"></span>
                 </div>
 
                 <div class="form-group">
-                    <label for="data_inscricao">Data Inscrição</label>
+                    <label for="data_inscricao">Data Inscrição *</label>
                     <input type="date" name="data_inscricao" id="data_inscricao" placeholder="Select Date">
                     <span class="error-message" id="error-data_inscricao"></span>
                 </div>
@@ -68,7 +68,7 @@ get_header();
                 </div>
 
                 <div class="form-group">
-                    <label for="post_code">Código Postal</label>
+                    <label for="post_code">Código Postal *</label>
                     <input type="text" name="post_code" id="post_code" placeholder="Enter Postal Code">
                     <span class="error-message" id="error-post_code"></span>
                 </div>
@@ -114,7 +114,7 @@ get_header();
                     <span class="error-message" id="error-encaminhado"></span>
                 </div>
                 <div class="form-group">
-                    <label for="a_date">A Date</label>
+                    <label for="a_date">A Date *</label>
                     <input type="date" name="a_date" id="a_date" placeholder="Select Date">
                     <span class="error-message" id="error-a_date">
                         <?php if (isset($a_date_error)) echo esc_html($a_date_error); ?>
@@ -169,8 +169,6 @@ get_header();
                 </div>
                 
                 <!-- //display error/success message here -->
-                
-
                 <div id="form-errors" class="text-danger" style="display: none;"></div>
                 <div id="form-success" class="text-success" style="display: none;"></div>
                 <?php if (!empty($message)): ?>
