@@ -24,6 +24,8 @@ function oceanwp_child_style() {
 		'checkId_nonce' => wp_create_nonce('unique_volunteer_id_nonce'),
 		'checkEmail_nonce' => wp_create_nonce('unique_email_nonce'),
 		'register_nonce' => wp_create_nonce('register-volunteer-nonce'), // Nonce for registering
+		'fetchToEdit_nonce' => wp_create_nonce('fetch-volunteer-data-nonce'), // Nonce for editing
+		// 'edit_nonce' => wp_create_nonce('edit-volunteer-nonce'), // Nonce for editing
 	));
 	wp_enqueue_script('registration-script', get_stylesheet_directory_uri() . '/js/registration.js', array('jquery'), '1.0', true);
     // wp_enqueue_script('form-validation', get_stylesheet_directory_uri() . '/js/form-validation.js', array('jquery'), '1.1', true);

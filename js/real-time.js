@@ -1,4 +1,15 @@
 jQuery(document).ready(function($) {
+    // Function to determine if the form is in edit mode
+    function isEditMode() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var myId = urlParams.get('id'); // Replace 'id' with your parameter name if different
+        return myId && !isNaN(myId) && parseInt(myId, 10) > 0;
+        // var editMode = myId && !isNaN(myId) && parseInt(myId, 10) > 0;
+        // console.log("isEditMode check:", editMode, "myId:", myId); // Debugging log
+        // return editMode;
+    }
+
+
     // Common function to show/hide spinner
     const toggleSpinner = (show) => {
         show ? showSpinner() : hideSpinner();
@@ -13,9 +24,41 @@ jQuery(document).ready(function($) {
             field.removeClass('success-message');
         }
     };
+    // Helper Function for fetchAndPopulateVolunteerData() to populate form fields with current id's data
+    function populateFormWithData(data) {
+        // Populate the form fields with the data
+        $('#volunteer_id').val(data.volunteer_id);
+        $('#data_inscricao').val(data.data_inscricao);
+        $('#first_name').val(data.first_name);
+        $('#last_name').val(data.last_name);
+        $('#post_code').val(data.post_code);
+        $('#morada').val(data.morada);
+        $('#localidade').val(data.localidade);
+        $('#telemovel').val(data.telemovel);
+        // $('#volunteer_email').val(data.volunteer_email);
+        $('#volunteer_email').val(data.volunteer_email).data('original-email', data.volunteer_email);
+        $('#education').val(data.education);
+        $('#profession').val(data.profession);
+        $('#encaminhado').val(data.encaminhado);
+        $('#a_date').val(data.a_date);
+        $('#pref1').val(data.pref1);
+        $('#pref2').val(data.pref2);
+        $('#pref3').val(data.pref3);
+        $('#pref_other').val(data.pref_other);
+    }
+    // Function to check if the email has been changed
+    function isEmailChanged() {
+        var currentEmail = $('#volunteer_email').val();
+        var originalEmail = $('#volunteer_email').data('original-email');
+        return currentEmail !== originalEmail;
+    }
     // AJAX call to check volunteer_id uniqueness
     // Refactored function using async/await for volunteer ID uniqueness check
     const checkVolunteerIdUniqueness = async (value) => {
+
+        if (isEditMode()) {
+            return { isValid: true };
+        }
         try {
             toggleSpinner(true);
             const response = await $.ajax({
@@ -33,35 +76,52 @@ jQuery(document).ready(function($) {
                 { isUnique: false, message: "Volunteer number is not available" };
         } catch (error) {
             toggleSpinner(false);
-            throw new Error("Error checking uniqueness");
+            throw new Error("Error checking ID uniqueness");
         }
     };
 
     const checkEmailUniqueness = async (value) => {
-        try {
-            toggleSpinner(true);
-            const response = await $.ajax({
-                url: volunteer_realtime_obj.ajaxurl,
-                method: 'POST',
-                data: {
-                    action: 'check_email_uniqueness',
-                    security: volunteer_realtime_obj.checkEmail_nonce,
-                    volunteer_email: value
-                }
-            });
-            toggleSpinner(false);
-            return response.success && response.data && response.data.isUnique ?
-                { isUnique: true, message: "Volunteer email is available" } :
-                { isUnique: false, message: "This email is registered already" };
-        } catch (error) {
-            toggleSpinner(false);
-            throw new Error("Error checking uniqueness");
+        if (!isEmailChanged()) {
+            return { isValid: true };
         }
+        // Check if the email has been changed and needs uniqueness validation
+        // if (isEmailChanged()) {
+            try {
+                toggleSpinner(true);
+                const response = await $.ajax({
+                    url: volunteer_realtime_obj.ajaxurl,
+                    method: 'POST',
+                    data: {
+                        action: 'check_email_uniqueness',
+                        security: volunteer_realtime_obj.checkEmail_nonce,
+                        volunteer_email: value
+                    }
+                });
+                toggleSpinner(false);
+                return response.success && response.data && response.data.isUnique ?
+                    { isUnique: true, message: "Volunteer email is available" } :
+                    { isUnique: false, message: "This email is registered already" };
+            } catch (error) {
+                toggleSpinner(false);
+                // throw new Error("Error checking Email uniqueness");
+                console.error("Error checking email uniqueness:", error);
+                console.log("Checking email uniqueness for:", value);
+                console.log("Nonce:", volunteer_realtime_obj.checkEmail_nonce);
+                return { isValid: false, message: "Error during validation" };
+            }
+        // } else {
+        //     // If email hasn't changed, no need to validate for uniqueness
+        //     return { isValid: true };
+        // }
     };
 
     // Generalized validation function       
     const validateFieldWithAjax = async (field, validationRegex, ajaxFunction, successMessage, errorMessage, emptyMessage) => {
         const value = field.val();
+        // Directly return valid if email hasn't changed
+        // if (field.attr('id') === 'volunteer_email' && !isEmailChanged()) {
+        //     return { isValid: true };
+        // }
         // Check for empty value and display emptyMessage if provided
         if (value === "") {
             displayErrorMessage(field, emptyMessage, false);
@@ -71,17 +131,18 @@ jQuery(document).ready(function($) {
             displayErrorMessage(field, errorMessage, false);
             return { isValid: false, message: errorMessage };
         }
-        // console.log(ajaxFunction); // Check what is being passed as ajaxFunction
+        console.log(ajaxFunction); // Check what is being passed as ajaxFunction
+        // AJAX validation if provided
         if (typeof ajaxFunction === 'function') {
-            try {
-                const result = await ajaxFunction(value);
-                displayErrorMessage(field, result.isUnique ? '' : result.message, result.isUnique);
-                return { isValid: result.isUnique, message: result.isUnique ? successMessage : result.message };
-            } catch (error) {
-                displayErrorMessage(field, error.message, false);
-                return { isValid: false, message: error.message };
+            const result = await ajaxFunction(value);
+            if (result.isValid !== undefined) {
+                displayErrorMessage(field, result.isValid ? '' : result.message, result.isValid);
+                return result;
+            } else {
+                displayErrorMessage(field, 'Unexpected response from server', false);
+                return { isValid: false, message: 'Unexpected response from server' };
             }
-        }else {
+        } else {
             // If ajaxFunction is not provided, assume field is valid
             displayErrorMessage(field, '', true);
             return { isValid: true };
@@ -239,14 +300,6 @@ jQuery(document).ready(function($) {
                 'Invalid post code format',
                 'Post code is required'
             ),
-            // validateFieldWithAjax(
-            //     $('#morada'),
-            //     /.+/, // Any non-empty string
-            //     null,
-            //     '',
-            //     'Invalid address format',
-            //     'Address is required'
-            // ),
             validateFieldWithAjax(
                 $('#localidade'),
                 /^[a-zA-Z0-9\/,\- ]+$/, // Any non-empty string
@@ -282,17 +335,25 @@ jQuery(document).ready(function($) {
         ];
         let results = await Promise.all(validations);
         toggleSpinner(false);
+        
+        // Log each validation result
+        results.forEach((result, index) => {
+            console.log(`Validation ${index}: `, result);
+        });
+
         return results.every(result => result.isValid);
     }
     // Function to clear the form fields and reset validation states
     function clearForm() {
-        $('#volunteerForm').trigger('reset'); // Resets all form fields
+        if (!isEditMode()) {
+            $('#volunteerForm').trigger('reset'); 
+        }
+            // Remove 'success-message' class from all fields
+            $('#volunteerForm').find('.success-message').removeClass('success-message');
 
-        // Remove 'success-message' class from all fields
-        $('#volunteerForm').find('.success-message').removeClass('success-message');
-
-        // Clear all error messages
-        $('.error-message').text('');
+            // Clear all error messages
+            $('.error-message').text('');
+       
     }
     
     // Attach validation to form submission event   
@@ -301,18 +362,18 @@ jQuery(document).ready(function($) {
         const isFormValid = await validateForm();
 
         if (isFormValid) {                    
-            // Extracting the my_id and determining the action
+            // Extracting the my_id
             var myId = $('#my_id').val();
-            var isEdit = myId && !isNaN(myId) && parseInt(myId, 10) > 0;
-            var action = isEdit ? 'edit_volunteer' : 'register_volunteer';
+            // var action = 'process_volunteer'; // General action for both edit and register
+            var action = 'register_volunteer'; // General action for both edit and register
 
             // Preparing formData for AJAX submission
             var formData = new FormData(this);
             formData.append('action', action);
-            formData.append('security', isEdit ? volunteer_realtime_obj.edit_nonce : volunteer_realtime_obj.register_nonce);
+            formData.append('security', volunteer_realtime_obj.register_nonce); // Using register nonce for simplicity
 
-            if (isEdit) {
-                formData.append('my_id', myId);
+            if (myId) {
+                formData.append('my_id', myId); // Add my_id only if it exists
             }
                 
             showSpinner();
@@ -324,17 +385,6 @@ jQuery(document).ready(function($) {
                 contentType: false,
                 success: function(response) {
                     hideSpinner();
-                    // if (response.success) {
-                    //     // Displaying the success message from the server
-                    //     $('#form-success').html(response.data).show();
-                    //     $('#form-errors').hide();
-                    //     showMessageWithZoomOutEffect(response.data, 'success');
-                    // } else {
-                    //     // Displaying the error message from the server
-                    //     $('#form-errors').html(response.data).show();
-                    //     $('#form-success').hide();
-                    //     showMessageWithZoomOutEffect(response.data, 'error');
-                    // }
                     if (response.success) {
                         // Show the success message and clear the form
                         showMessageWithZoomOutEffect(response.data, 'success');
@@ -347,20 +397,60 @@ jQuery(document).ready(function($) {
                 // error: function(jqXHR) {
                 //     hideSpinner();
                 //     let errorMessage = jqXHR.responseJSON && jqXHR.responseJSON.data ? jqXHR.responseJSON.data : "An unknown error occurred.";
-                //     $('#form-errors').html(errorMessage).show();
-                //     $('#form-success').hide();
                 //     showMessageWithZoomOutEffect(errorMessage, 'error');
-                // },
-                error: function(jqXHR) {
+                // }
+                error: function(jqXHR, textStatus, errorThrown) {
                     hideSpinner();
-                    let errorMessage = jqXHR.responseJSON && jqXHR.responseJSON.data ? jqXHR.responseJSON.data : "An unknown error occurred.";
+                    let errorMessage = "An unknown error occurred.";
+                    if (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.data) {
+                        errorMessage = jqXHR.responseJSON.data;
+                    } else if (textStatus) {
+                        errorMessage = "AJAX Error: " + textStatus;
+                    }
                     showMessageWithZoomOutEffect(errorMessage, 'error');
                 }
             });
         } else {
             hideSpinner();
-            // Optionally show a message if form validation fails
             showMessageWithZoomOutEffect('Please correct the errors in the form.', 'error');
         }
     });
+ 
+
+    // Function to fetch and populate volunteer data for editing
+    function fetchAndPopulateVolunteerData() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var myId  = urlParams.get('id');
+        if (myId ) {
+            showSpinner();
+            $.ajax({
+                url: volunteer_realtime_obj.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'fetch_volunteer_data',
+                    my_id: myId, 
+                    security: volunteer_realtime_obj.fetchToEdit_nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        populateFormWithData(response.data);
+                        hideSpinner();
+                    } else {
+                        displayErrors([response.data || 'Failed to fetch data.']);
+                        hideSpinner();
+                    }
+                },
+                error: function() {
+                    displayErrors(['Failed to send request. Please try again.']);
+                    hideSpinner();
+                }
+            });
+        }
+    }
+
+    // Call the function if we are on the dataform page
+    if(window.location.pathname.includes('volunteer-registration-form')) {
+        fetchAndPopulateVolunteerData();
+    }
+
 }); 

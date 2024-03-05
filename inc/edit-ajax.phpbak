@@ -9,6 +9,26 @@ function validate_input_edit($input, $regex, $error_msg) {
     }
     return $sanitized_input;
 }
+function process_volunteer_update($wpdb, $data) {
+    $table_name = $wpdb->prefix . 'volunteers';
+    $format = array_fill(0, count($data), '%s');
+    $format['volunteer_id'] = '%d';
+    $format['telemovel'] = '%d';
+
+    if ($wpdb->update($table_name, $data, $format)) {
+        wp_send_json_success('Volunteer updated successfully.');
+    } else {
+        wp_send_json_error('Database error: ' . $wpdb->last_error);
+        // wp_send_json_error('Error in registering volunteer.');
+    }
+    wp_die();
+}
+
+
+
+
+
+
 
 function edit_volunteer() {
     global $wpdb;

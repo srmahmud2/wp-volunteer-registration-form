@@ -34,14 +34,31 @@ function process_volunteer_registration($wpdb, $data) {
     $format['volunteer_id'] = '%d';
     $format['telemovel'] = '%d';
 
-    if ($wpdb->insert($table_name, $data, $format)) {
-        wp_send_json_success('Volunteer registered successfully.');
+    // Determine if this is an edit operation
+    $is_edit = isset($data['my_id']) && !empty($data['my_id']) && is_numeric($data['my_id']);
+
+    if ($is_edit) {
+        // Update existing volunteer
+        $my_id = intval($data['my_id']);
+        unset($data['volunteer_id']); // Do not update volunteer_id in edit mode
+        unset($data['my_id']); // Remove my_id from data as it's used in WHERE clause
+        $where = array('my_id' => $my_id);
+        if ($wpdb->update($table_name, $data, $where, $format, array('%d')) !== false) {
+            wp_send_json_success('Volunteer updated successfully.');
+        } else {
+            wp_send_json_error('Error in updating volunteer: ' . $wpdb->last_error);
+        }
     } else {
-        wp_send_json_error('Database error: ' . $wpdb->last_error);
-        // wp_send_json_error('Error in registering volunteer.');
+        // Insert new volunteer
+        if ($wpdb->insert($table_name, $data, $format) !== false) {
+            wp_send_json_success('Volunteer registered successfully.');
+        } else {
+            wp_send_json_error('Error in registering volunteer: ' . $wpdb->last_error);
+        }
     }
     wp_die();
 }
+
 /**
  * Handles the AJAX request to check for the uniqueness of a volunteer ID.
  * This function checks if the given volunteer ID is already present in the database.
@@ -88,13 +105,22 @@ add_action('wp_ajax_nopriv_check_volunteer_id_uniqueness', 'check_volunteer_id_u
 function check_email_uniqueness_function() {
     global $wpdb;
     check_ajax_referer('unique_email_nonce', 'security');
-    $volunteer_email = $_POST['volunteer_email'];
 
+    $volunteer_email = $_POST['volunteer_email'];
+    $my_id = isset($_POST['my_id']) ? intval($_POST['my_id']) : null;
+    error_log('Email Uniqueness Check: ' . print_r($_POST, true));
     // Check if volunteer_email is set
     if ($volunteer_email !== null) {
-        $exists = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email));
+        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email);
+
+        // Exclude the current volunteer from the check if my_id is provided
+        if ($my_id) {
+            $query .= $wpdb->prepare(" AND my_id != %d", $my_id);
+        }
+
+        $exists = $wpdb->get_var($query);
         if ($exists > 0) {
-            wp_send_json_error('Email already registered.');
+            wp_send_json_error('This email is already registered.');
         } else {
             wp_send_json_success(array('isUnique' => true));
         }
@@ -102,12 +128,7 @@ function check_email_uniqueness_function() {
         wp_send_json_error('Invalid Email.');
     }
 
-    wp_die();
 }
-add_action('wp_ajax_check_email_uniqueness', 'check_email_uniqueness_function');
-add_action('wp_ajax_nopriv_check_email_uniqueness', 'check_email_uniqueness_function');
-
-
 /**
  * Handles the registration of a new volunteer.
  * Validates and sanitizes the input data, checks for existing volunteer ID and email,
@@ -120,15 +141,12 @@ add_action('wp_ajax_nopriv_check_email_uniqueness', 'check_email_uniqueness_func
 function register_volunteer() {
     global $wpdb;
     check_ajax_referer('register-volunteer-nonce', 'security');
-    // Extract and validate volunteer_id
-    // $volunteer_id = isset($_POST['volunteer_id']) ? intval($_POST['volunteer_id']) : null;
-    // $volunteer_id = isset($_POST['volunteer_id']) ? $_POST['volunteer_id'] : null;
+    // Determine if this is an edit operation
+    $is_edit = isset($_POST['my_id']) && is_numeric($_POST['my_id']);
+    $my_id = $is_edit ? intval($_POST['my_id']) : null;
+    
 
     // Check if volunteer_id is provided and is a positive number
-    // if ($volunteer_id !== null && $volunteer_id !== '' && (!is_numeric($volunteer_id) || intval($volunteer_id) <= 0)) {
-    //     wp_send_json_error('Invalid Volunteer number.');
-    //     wp_die();
-    // }
     if (isset($_POST['volunteer_id']) && $_POST['volunteer_id'] !== '') {
         if (is_numeric($_POST['volunteer_id']) && intval($_POST['volunteer_id']) > 0) {
             $volunteer_id = intval($_POST['volunteer_id']);
@@ -154,16 +172,24 @@ function register_volunteer() {
     $post_code = validate_input($_POST['post_code'] ?? '', '/^[a-zA-Z0-9\/,\- ]+$/', 'Invalid post code');
     $localidade = validate_input($_POST['localidade'] ?? '', '/^[a-zA-Z0-9\/,\- ]+$/', 'Invalid localidade');
     $telemovel = validate_input($_POST['telemovel'] ?? '', '/^\+?([0-9]{1,3})?[-. (]?([0-9]{1,4})[)-. ]?([0-9]{1,4})[-. ]?([0-9]{1,4})[-. ]?([0-9]{1,9})$/', 'Invalid phone number');
-    $volunteer_email = sanitize_email($_POST['volunteer_email'] ?? '');
     // Check for valid email
+    $volunteer_email = sanitize_email($_POST['volunteer_email'] ?? '');
     if (!is_email($volunteer_email)) {
         wp_send_json_error('Invalid email format.');
         wp_die();
     }
     // Check for unique email
-    if ($wpdb->get_var($wpdb->prepare("SELECT my_id FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email))) {
-        wp_send_json_error('This email is already registered.');
-        wp_die();
+    // if ($wpdb->get_var($wpdb->prepare("SELECT my_id FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $volunteer_email))) {
+    //     wp_send_json_error('This email is already registered.');
+    //     wp_die();
+    // } 
+    // Check for unique email based on edit or not
+    if (!$is_edit || ($is_edit && $volunteer_email != get_existing_volunteer_email($wpdb, $my_id))) {
+        // Check for unique email only if it's a new registration or email has changed in edit
+        if (email_exists_in_db($wpdb, $volunteer_email, $my_id)) {
+            wp_send_json_error('This email is already registered.');
+            wp_die();
+        }
     }
     $a_date = validate_input($_POST['a_date'] ?? '', '/^\d{4}-\d{2}-\d{2}$/', 'Invalid A date');
     $morada = sanitize_text_field($_POST['morada'] ?? '');
@@ -175,12 +201,30 @@ function register_volunteer() {
     $pref3 = sanitize_text_field($_POST['pref3'] ?? '');
     $pref_other = sanitize_text_field($_POST['pref_other'] ?? '');
 
-
-
     // Prepare and execute the insert query
     $table_name = $wpdb->prefix . 'volunteers';
     $data = compact('volunteer_id', 'data_inscricao', 'first_name', 'last_name', 'post_code', 'morada', 'localidade', 'telemovel', 'volunteer_email', 'education', 'profession', 'encaminhado', 'a_date', 'pref1', 'pref2', 'pref3', 'pref_other');
+
+    if ($is_edit) {
+        $data['my_id'] = $my_id; // Include my_id for update
+    }
+
+
     process_volunteer_registration($wpdb, $data);
+}
+
+// Helper function to get existing volunteer email
+function get_existing_volunteer_email($wpdb, $my_id) {
+    return $wpdb->get_var($wpdb->prepare("SELECT volunteer_email FROM {$wpdb->prefix}volunteers WHERE my_id = %d", $my_id));
+}
+
+// Helper function to check if email exists in the database, excluding current volunteer
+function email_exists_in_db($wpdb, $email, $exclude_id = null) {
+    $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}volunteers WHERE volunteer_email = %s", $email);
+    if ($exclude_id !== null) {
+        $query .= $wpdb->prepare(" AND my_id != %d", $exclude_id);
+    }
+    return $wpdb->get_var($query) > 0;
 }
 add_action('wp_ajax_register_volunteer', 'register_volunteer');
 add_action('wp_ajax_nopriv_register_volunteer', 'register_volunteer');

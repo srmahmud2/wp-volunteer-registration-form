@@ -13,5 +13,3 @@ function handleServerSideErrors(response) {
         updateRegistrationMessage(response.message);
     }
 }
-
-

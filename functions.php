@@ -46,6 +46,6 @@ function add_data_to_registration_script($tag, $handle, $src) {
 // AJAX handlers
 // require get_stylesheet_directory() . '/inc/register-ajax.php';
 require get_stylesheet_directory() . '/inc/real-time-functions.php';
-require get_stylesheet_directory() . '/inc/edit-ajax.php';
+// require get_stylesheet_directory() . '/inc/edit-ajax.php';
 require get_stylesheet_directory() . '/inc/fetch-ajax.php';
 require get_stylesheet_directory() . '/inc/delete-ajax.php';
